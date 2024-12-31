@@ -152,7 +152,7 @@ import axios from 'axios'
       data(){
           return{
             cartList:[],
-            discount:13.2,
+            discount: 0,
             shipPrice:0,
             freightRisk:5,
             mdShow:false,

@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 var $conf = require('../conf/conf');
+var my = require('../util/mq.js');
 const crypto = require('crypto-js');
 // 使用连接池
 var pool = mysql.createPool($conf.mysql);
@@ -94,8 +95,21 @@ router.post('/skill-product', function(req, res, next) {
         return;
     }
     ipRestrict.push(host);
-    const { productId } = req.body;
+    const {
+        productId,
+        pay_type,
+        streetName,
+        postCode,
+        tel,
+        postName,
+     } = req.body;
+    const freightRisk = '5', shipPrice = '5';
     let userId = req.cookies.userId;
+    var platform = '622';
+    var r1 = Math.floor(Math.random()*10);
+    var r2 = Math.floor(Math.random()*10);
+    var sysDate = new Date().Format('yyyyMMddhhmmss');
+    var orderIdVal = platform+r1+sysDate+r2;
     if (skillMap.has(userId)) {
         const userMap = skillMap.get(userId);
         if (userMap.includes(productId)) {
@@ -146,7 +160,27 @@ router.post('/skill-product', function(req, res, next) {
             } else {
                 skillMap.set(userId, [productId]);
             }
-            
+            const values = [
+                orderIdVal,
+                userId,
+                productId,
+                product.productName,
+                product.productPrice,
+                product.productNum,
+                product.productImg,
+                postName,
+                streetName,
+                postCode,
+                tel,
+                String(product.productPrice - ~~product.declinePrice + ~~freightRisk + ~~shipPrice),
+                String(product.productPrice),
+                product.declinePrice,
+                shipPrice,
+                freightRisk,
+                new Date().Format('yyyy-MM-dd hh:mm:ss'),
+                1
+            ]
+            my.sendMessage(values);
             res.json({
                 status:'1',
                 msg: '秒杀成功'

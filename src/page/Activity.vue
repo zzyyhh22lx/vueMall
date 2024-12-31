@@ -20,9 +20,9 @@
                         <a href="#"><img v-lazy="`static/${item.productImg}`" alt=""></a> <!--v-lazy图片懒加载-->
                       </div>
                       <div class="main">
-                        <div class="name">{{ item.productName }}</div>
+                        <div class="name">{{ item.productName }}<span style="color: rgb(217,131,131);display: block; font-size: 12px;">库存：{{ item.limit_num }}</span></div>
                         <div class="details"><a href="javascript:;" title="详情" style="font-size: 12px;color: #8f8f8f;">详情: {{item.productDetails}}</a></div>
-                        <div class="price"><span style="text-decoration: line-through; color:#8f8f8f">¥{{ item.productPrice }}</span> -> {{ item.productPrice - (~~item.declinePrice) }}</div>
+                        <div class="price"><span style="text-decoration: line-through; color:#8f8f8f">¥{{ item.productPrice }}</span> -> {{ item.productPrice - (~~item.declinePrice) }} </div>
                         <div class="btn-area">
                           <a v-if="item.limit_num > 0" :class="{'btn--pay':payC}" class="btn btn--m" style="background: #d1434a; color:#fff;width: 100%"  @click="buy(item)">立即抢购</a>
                           <a v-else href="javascript:;" class="btn btn--m" style="background: #d1434a; color:#fff;width: 100%;background: rgb(186 186 186);border: none; cursor: not-allowed;">库存已售罄</a>
@@ -186,26 +186,51 @@ export default{
           this.buyItem = item;
         },
         yesPay() {
-          axios.post('/api/skill/skill-product',{
-            productId: this.buyItem.productId,
-            pay_type: this.selectType,
-          }).then(res=>{
+          axios.get('/api/users/addressList').then((res) => {
             res = res.data;
             if(res.status === '1') {
-              this.mdShow = false;
-              this.$message({
-                message: res.msg,
-                type: 'success'
+              const addressData = res.result.filter(item => item.isDefault === 1);
+              if (addressData.length === 0) {
+                this.$message({
+                  message: '请先添加默认地址',
+                  type: 'error'
+                });
+                setTimeout(() => {
+                  this.$router.push({
+                    path:`/addresslist`
+                  });
+                }, 1000);
+                return;
+              }
+              axios.post('/api/skill/skill-product',{
+                pay_type: this.selectType,
+                streetName: addressData[0].streetName,
+                postCode: addressData[0].postCode,
+                tel: addressData[0].tel,
+                postName: addressData[0].userName,
+
+                productId: this.buyItem.productId,
+              }).then(res=>{
+                res = res.data;
+                if(res.status === '1') {
+                  this.mdShow = false;
+                  this.$message({
+                    message: res.msg,
+                    type: 'success'
+                  });
+                } else {
+                  this.$message({
+                    message: res.msg,
+                    type: 'error'
+                  });
+                }
+                this.fetchDetail();
+                this.buyItem = {};
+                this.mdShow = false;
               });
-            } else {
-              this.$message({
-                message: res.msg,
-                type: 'error'
-              });
+            }else{
+              console.log(res.msg);
             }
-            this.fetchDetail();
-            this.buyItem = {};
-            this.mdShow = false;
           });
         }
       },

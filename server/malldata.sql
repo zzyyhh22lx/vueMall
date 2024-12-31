@@ -178,4 +178,13 @@ INSERT INTO `user` (`id`, `userId`, `userName`, `userPwd`, `myPhoto`) VALUES
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
--- 秒杀
+-- 秒杀活动
+drop table if exists skillActivity;
+CREATE TABLE IF NOT EXISTS `skillActivity` (
+  `id` int(16) NOT NULL AUTO_INCREMENT,
+  `productIDList` varchar(200) NOT NULL,
+  `declinePrice` varchar(200) NOT NULL,
+  `startTime` timestamp NOT NULL,
+  `endTime` timestamp NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
